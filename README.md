@@ -1,148 +1,91 @@
-# Satellite_Project
+# Satellite Project — ABB photovoltaic handling cell
 
-An installable downstream Isaac Lab task package with a standard uv `src` layout.
+A saved OpenUSD factory scene and a working Isaac Lab batch-transfer task, reconstructed from
+[vision.md](vision.md). Two articulated ABB arms, distributed tooling, solar-cell supply stacks,
+orange transfer surfaces, transparent guards, an array section, controls, lights and four cameras
+are composed in metre-scale, Z-up USD.
 
-The registered tasks are:
-- `SatelliteProject-Satellite-Arm`
-- `SatelliteProject-Satellite-Arm-Direct`
-- `SatelliteProject-Satellite-Marl-Arm-Direct`
+**Open in Isaac Sim:** [`factory.usdc`](src/Satellite_Project/assets/data/environments/factory.usdc),
+a single-file scene with geometry and physics included. The editable composition is
+[`factory.usda`](src/Satellite_Project/assets/data/environments/factory.usda); keep its adjacent
+`robots/` and `environments/` folders together. Isaac Sim supplies the built-in `OmniPBR.mdl` material.
 
-## Implement the Task
+![Factory overview](recordings/11-22-2026/11:29pm_factory-overview.png)
 
-This project contains task scaffolding. Before running or training, replace `MISSING` configuration values and
-implement functions that raise `NotImplementedError`. Define the scene and robot assets, physics and timing,
-action and observation spaces, rewards, termination conditions, and reset behavior. Manager-based task terms live
-in the family's `mdp` package. Define assets in the scene configuration; direct environments inherit scene creation
-from the framework. If AMP is selected, implement reference-motion collection as well. Direct AMP tasks must also
-update observation history and supply `self.extras["amp_obs"]` on every step.
+## Run
 
-Registrations and agent configurations are provided so you can build on the same structure as the runnable example.
-
-## Installation
-
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then create the project environment. The default
-environment uses the Newton backend and does not install Isaac Sim:
+Run from this repository with the same installed Isaac Sim 6.2 / Isaac Lab 3.0 environment used
+by S1-Project:
 
 ```bash
-uv sync
+# Full saved factory; use its Overview, Pickup, Cells or Array cameras.
+~/env_isaaclab/bin/python scripts/preview.py
+
+# Interactive physical cell: six joint sliders, vacuum switch and reset button.
+~/env_isaaclab/bin/python scripts/run_factory.py --mode drive
+
+# Validated scripted approach → contact → lift → transfer → release → retract.
+~/env_isaaclab/bin/python scripts/run_factory.py --mode demo
+
+# Record live physics milestones without opening a desktop window.
+~/env_isaaclab/bin/python scripts/run_factory.py --mode demo --capture \
+  --visualizer kit --kit_args=--no-window
+
+# Parallel PPO training; this task has seven actions and 31 state observations.
+~/env_isaaclab/bin/python scripts/run_factory.py --mode train --num-envs 8 --iterations 500
+
+# Reload the checkpoint produced by the completed training smoke run.
+~/env_isaaclab/bin/python scripts/run_factory.py --mode play --num-envs 8 \
+  --checkpoint outputs/training/model_11.pt
 ```
 
-This project's `pyproject.toml` uses editable relative paths to an Isaac Lab source checkout. Update
-`[tool.uv.sources]` if either directory moves.
+The supported Gym task is `SatelliteProject-Satellite-Arm-Direct`, in the existing
+`src/Satellite_Project/tasks/satellite_direct/config/Arm/` layout. The manager-based and MARL
+registrations inherited from the initial template remain unimplemented; they are not required
+by these commands. AMP and distillation are also outside the implemented PPO workflow.
 
-The project forwards every optional extra declared by the Isaac Lab package used to create it, including physics,
-rendering, visualizer, RL, teleoperation, and development features. Inspect `pyproject.toml` for the complete list and
-pass each required extra to `uv run`:
+The interactive/task scene uses the same saved fixtures and robot. Its rear arm is a static
+visual reference, and room walls are omitted for parallel environments. Both arms are articulated
+in the full `factory.usda`. Joint targets can also be edited through Isaac Sim's articulation tools;
+the vacuum logic runs in the task, rather than being embedded Python in the USD.
+
+## What is verified
+
+- Isaac Sim rendering of the full composed scene and inspection cameras.
+- Physical joint motion and stable holding, collision support for the cell batch, contact-gated pickup,
+  lift, transfer, release, and settled delivery checks.
+- Parallel Isaac Lab simulation, PPO optimization, checkpoint creation and reload.
+- Offline asset composition, six-joint structure, reachable waypoints, and unmodified upstream file hashes.
+
+The short PPO run is an **execution test**, not a successful learned manipulation policy. The completed
+handling demonstration uses inverse kinematics and joint drives. Training checkpoints and diagnostics
+are under `outputs/`; dated screenshots and the progress history are in [log.md](log.md).
+
+## Reconstruction limits
+
+The robot is the real **ABB IRB1600 X-120 USD** from [Workr's robot library](https://github.com/work-r-labs/robots),
+revision `ab6aa489855256de07ba46c7b45887fdbc42b607`. Its geometry closely resembles the supplied footage;
+**the exact factory robot variant cannot be confirmed** from the available frames. It is not represented
+as a verified exact copy. See [asset provenance](src/Satellite_Project/assets/data/robots/abb_irb1600/source.json)
+and the included upstream [license](src/Satellite_Project/assets/data/robots/abb_irb1600/LICENSE).
+
+Dimensions, placement, mass, tooling, drive tuning, vacuum behavior and trajectory are simulation
+assumptions. Eight cells are represented as one rigid batch; the twelve-layer supply stacks are static.
+Vacuum is a compliant, force-limited attachment with equal and opposite wrist reaction, a 4 mm approach
+gate, and release/slip logic. Individual wafer flexure, fracture, leakage, conveyor transport and downstream
+manufacturing processes are not simulated. The larger array section is separate from the transferred batch,
+in accordance with the montage's uncertain continuity; its inspection stand is an inferred fixture.
+
+## Rebuild and check
 
 ```bash
-# Standalone OV PhysX
-uv run --extra ovphysx isaaclab random_agent --task <TASK_NAME> physics=ovphysx
-
-# Isaac Sim with PhysX and RTX rendering
-uv run --extra isaacsim isaaclab random_agent --task <TASK_NAME> physics=isaacsim_physx
-
-# Isaac Sim with the Rerun visualizer
-uv run --extra isaacsim --extra rerun isaaclab random_agent --task <TASK_NAME> --viz rerun
+~/env_isaaclab/bin/python scripts/build_factory.py
+~/env_isaaclab/bin/python scripts/preview.py --capture
+~/env_isaaclab/bin/python scripts/validate_stage.py
+~/env_isaaclab/bin/python scripts/run_factory.py --mode smoke --num-envs 8
+PYTHONPATH=src ~/env_isaaclab/bin/python -m pytest -q
 ```
 
-The `all` extra forwards Isaac Lab's `all` selection. The `ov` extra installs both the `ovphysx` and `ovrtx` runtimes;
-you can also select either independently. Commit `pyproject.toml` and `uv.lock` so collaborators use the same
-environment.
-
-## Run the tasks
-
-Replace the placeholders below with a task listed above and a selected RL library.
-
-```bash
-# List this project's environments and their available presets
-uv run isaaclab list_envs --show_presets
-
-# Exercise an environment without a trained policy
-uv run isaaclab zero_agent --task <TASK_NAME> --num_envs 16
-uv run isaaclab random_agent --task <TASK_NAME> --num_envs 16
-
-# Train and play
-uv run isaaclab train --rl_library <RL_LIBRARY> --task <TASK_NAME>
-uv run isaaclab play --rl_library <RL_LIBRARY> --task <TASK_NAME> --checkpoint latest
-
-# Distributed training
-uv run isaaclab train_multigpu --rl_library <RL_LIBRARY> --task <TASK_NAME> --num_gpus 2
-
-# Benchmark startup, runtime, training, or play
-uv run isaaclab benchmark runtime --task <TASK_NAME> --num_envs 16 --num_steps 1000
-uv run isaaclab benchmark training --rl_library <RL_LIBRARY> --task <TASK_NAME> --max_iterations 10
-```
-
-Use `physics=<PRESET>` to select one of the presets shown by `isaaclab list_envs`.
-
-## Project structure
-
-Task families live in `src/Satellite_Project/tasks`. Within a manager-based family, task-wide MDP terms live in `mdp`, while
-robot-specific scenes, registrations, and agent configurations live in `config/Arm`. Add another robot by
-creating a sibling of `config/Arm`; add another task by creating a sibling task-family directory.
-
-## Project assets
-
-Keep project-owned USD files and related data under `src/Satellite_Project/assets/data`. The asset module exposes a
-stable path that works from an editable checkout and an installed wheel:
-
-```python
-from Satellite_Project.assets import SATELLITE_PROJECT_ASSETS_DIR
-
-robot_usd_path = SATELLITE_PROJECT_ASSETS_DIR / "robots" / "my_robot.usd"
-```
-
-Keep asset configuration in the `Satellite_Project.assets` package and pass `str(robot_usd_path)` to configuration fields that
-expect a string. USD files are configured for Git LFS by the project's `.gitattributes`; install Git LFS before adding
-large binary assets.
-
-## Development
-
-Run the registration test and code-quality checks through the project environment:
-
-```bash
-uv run pytest
-uv run pre-commit run --all-files
-```
-
-The test helpers under `source/isaaclab_tasks/test` in the Isaac Lab repository are not part of the installed
-`isaaclab_tasks` package. Keep test fixtures in this project and use public Isaac Lab APIs. If you copy
-`env_test_utils.py`, it becomes vendored code whose upstream changes you must track.
-
-To configure VS Code or Cursor, run the `setup_python_env` task or invoke its command directly:
-
-```bash
-uv run isaaclab --editor
-```
-
-The setup command selects the active interpreter and writes a git-ignored `pyrightconfig.json`. The resulting
-configuration inherits the project's checked-in Pyright settings and adds the Isaac Sim extensions, project `src` root,
-and any Isaac Lab packages discovered in the active Python environment. This supports both Pylance in VS Code and
-basedpyright in Cursor.
-
-In VS Code, use Pylance and select the interpreter that ran the setup command. In Cursor, install the
-[basedpyright extension](https://marketplace.visualstudio.com/items?itemName=detachhead.basedpyright) instead of
-Pylance, select the same interpreter, and reload the window. Both language servers read `pyrightconfig.json`.
-
-When using the `isaacsim` extra, include it while generating the editor configuration so the command can discover the
-Isaac Sim installation:
-
-```bash
-uv run --extra isaacsim isaaclab --editor
-```
-
-For an Isaac Sim binaries installation that is not available in the project environment, provide its path explicitly:
-
-```bash
-# Linux
-uv run isaaclab --editor --isaac_path <isaac-sim-path>
-
-# Windows
-uv run isaaclab --editor --isaac_path <isaac-sim-path>
-```
-
-## Troubleshooting
-
-If Pylance or basedpyright cannot resolve modules, confirm that the selected interpreter matches the one used to run the
-setup command, then reload the editor window. To add a missing extension or reduce indexing memory, edit the `extraPaths`
-array in the root `pyrightconfig.json`; remove simulator extension directories that the project does not use.
+The builder changes project composition layers, never the pinned vendor USDs. `pyproject.toml` retains
+the template's uv layout, with local Isaac Lab source paths corrected to `~/IsaacLab` from this checkout.
+The commands above use the already installed environment; no new simulator installation is needed.

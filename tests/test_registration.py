@@ -23,7 +23,9 @@ def test_task_registrations():
         },
         "SatelliteProject-Satellite-Marl-Arm-Direct": {
             "entry_point": "Satellite_Project.tasks.satellite_marl_direct.config.Arm.env:SatelliteMarlEnv",
-            "env_cfg_entry_point": "Satellite_Project.tasks.satellite_marl_direct.config.Arm.env_cfg:SatelliteMarlEnvCfg",
+            "env_cfg_entry_point": (
+                "Satellite_Project.tasks.satellite_marl_direct.config.Arm.env_cfg:SatelliteMarlEnvCfg"
+            ),
             "default_agent": "skrl",
         },
     }

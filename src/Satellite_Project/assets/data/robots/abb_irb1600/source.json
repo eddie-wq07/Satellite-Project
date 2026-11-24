@@ -1,0 +1,44 @@
+{
+  "repository": "https://github.com/work-r-labs/robots",
+  "commit": "ab6aa489855256de07ba46c7b45887fdbc42b607",
+  "model": "ABB IRB1600 X-120",
+  "identification": "Visual candidate, not confirmed exact factory model",
+  "files": [
+    {
+      "path": "IRB1600_X-120.usd",
+      "url": "https://raw.githubusercontent.com/work-r-labs/robots/ab6aa489855256de07ba46c7b45887fdbc42b607/library/ABB/IRB1600_X-120_v1/IRB1600_X-120/IRB1600_X-120.usd",
+      "sha256": "67f4d7566a3b66d8b03f93d2164bbfa64f9663f3702c245a9c4d8705084494b6",
+      "bytes": 1604
+    },
+    {
+      "path": "configuration/IRB1600_X-120_base.usd",
+      "url": "https://raw.githubusercontent.com/work-r-labs/robots/ab6aa489855256de07ba46c7b45887fdbc42b607/library/ABB/IRB1600_X-120_v1/IRB1600_X-120/configuration/IRB1600_X-120_base.usd",
+      "sha256": "fc58b06ae864451bfe826154d78f333c5bab12d551629aa7542991e87a1fefc0",
+      "bytes": 4115041
+    },
+    {
+      "path": "configuration/IRB1600_X-120_physics.usd",
+      "url": "https://raw.githubusercontent.com/work-r-labs/robots/ab6aa489855256de07ba46c7b45887fdbc42b607/library/ABB/IRB1600_X-120_v1/IRB1600_X-120/configuration/IRB1600_X-120_physics.usd",
+      "sha256": "e2ed10294b9a8b33429111f8c339e5e44322c669488483d9f4fa5476989a5cc9",
+      "bytes": 4862
+    },
+    {
+      "path": "configuration/IRB1600_X-120_sensor.usd",
+      "url": "https://raw.githubusercontent.com/work-r-labs/robots/ab6aa489855256de07ba46c7b45887fdbc42b607/library/ABB/IRB1600_X-120_v1/IRB1600_X-120/configuration/IRB1600_X-120_sensor.usd",
+      "sha256": "6c6495167fab5477ccccedc5efcd39bac150ffe55facf4b63c94510b1365cdc9",
+      "bytes": 653
+    },
+    {
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/work-r-labs/robots/ab6aa489855256de07ba46c7b45887fdbc42b607/LICENSE",
+      "sha256": "119e95d8c2ab10f18f17d7a0e889f7a92bdba90f4870bbb6e4e9fefded29fb0a",
+      "bytes": 1063
+    },
+    {
+      "path": "IRB1600_X-120.urdf",
+      "url": "https://raw.githubusercontent.com/work-r-labs/robots/ab6aa489855256de07ba46c7b45887fdbc42b607/library/ABB/IRB1600_X-120_v1/IRB1600_X-120.urdf",
+      "sha256": "6231fb19646c1f8de000098e8d4ad6034a3d917238f3fd16df4f319ce7a15e6b",
+      "bytes": 6263
+    }
+  ]
+}

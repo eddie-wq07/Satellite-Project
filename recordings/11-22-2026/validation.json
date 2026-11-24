@@ -1,0 +1,39 @@
+{
+  "completed_at": "2026-11-22T23:29:50.561842-07:00",
+  "scene": "src/Satellite_Project/assets/data/environments/factory.usdc",
+  "scene_sha256": "45e94ab1a24841930fb51774c7a73d92af72f5fc895643dd955c5879b3d4367e",
+  "checks": {
+    "standalone": {
+      "passed": true,
+      "log": "outputs/standalone.log",
+      "evidence": "STANDALONE_FACTORY_VALIDATED"
+    },
+    "parallel_transfer": {
+      "passed": true,
+      "log": "outputs/demo-parallel.log",
+      "evidence": "TRANSFER_VALIDATED 8"
+    },
+    "manual_controls": {
+      "passed": true,
+      "log": "outputs/drive.log",
+      "evidence": "MANUAL_CONTROLS_VALIDATED 30"
+    },
+    "checkpoint_reload": {
+      "passed": true,
+      "log": "outputs/play.log",
+      "evidence": "CHECKPOINT_RELOAD_VALIDATED"
+    },
+    "unit_tests": {
+      "passed": true,
+      "log": "outputs/tests-final.log",
+      "evidence": "5 passed"
+    }
+  },
+  "ppo_smoke": {
+    "iterations": 12,
+    "environments": 8,
+    "checkpoint": "outputs/training/model_11.pt",
+    "learned_task_success_claimed": false
+  },
+  "robot_identification": "ABB IRB1600 X-120 public USD, visual candidate; exact factory variant unverified"
+}
