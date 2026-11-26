@@ -165,3 +165,144 @@ The sequence does not visibly demonstrate cell fabrication, semiconductor proces
 ## Standalone scene description
 
 Inside a bright automated manufacturing enclosure, white ABB robot arms work above silver trays and orange transfer surfaces. One arm carries a broad rectangular gripping head fitted with multiple round contact modules, blue tubing, and black service cables. Beneath it, thin dark photovoltaic cells sit in closely arranged stacks. The tool approaches the stack tops, with its wide face held parallel to the material. A cutaway reveals the cells laid out in a regular blue-purple grid, their surfaces crossed by fine metallic conductor lines. Further cuts show a long handling tool moving clear of an orange belt-like surface, a wider view of articulated robot motion behind transparent guarding, and a larger cell-covered section being tilted through the workstation. The sequence shows automated solar-cell and solar-array-section handling, but its rapid edits and obscured gripping interfaces do not reveal a complete, traceable pickup-to-placement cycle for one individual part.
+
+## Implemented program flow
+
+The sections above describe the source footage. The diagrams below describe the current repository
+implementation. Run commands from the repository root using the installed Isaac environment:
+
+```bash
+# Scripted physical pickup and delivery
+~/env_isaaclab/bin/python scripts/run_factory.py --mode demo --num-envs 8
+
+# Train PPO using the same task and physics
+~/env_isaaclab/bin/python scripts/run_factory.py --mode train --num-envs 8 --iterations 500
+
+# Run the resulting policy for 360 steps
+~/env_isaaclab/bin/python scripts/run_factory.py --mode play --num-envs 8 \
+  --checkpoint outputs/training/model_499.pt
+```
+
+In the diagrams, **Task** means `src/Satellite_Project/tasks/satellite_direct/config/Arm/`,
+and **Assets** means `src/Satellite_Project/assets/data/`. Solid arrows show execution or data
+flow; dotted arrows show configuration, file dependencies, or output writes.
+
+### Terminal to shutdown
+
+```mermaid
+flowchart TD
+    Terminal["Terminal: python scripts/run_factory.py --mode ..."] --> Runner["run_factory.py"]
+    Runner --> Bootstrap["sim_bootstrap.py<br/>Set project ROOT, add src/ to Python path"]
+    Bootstrap --> Args["Parse mode, environment count, device,<br/>checkpoint and recording options"]
+    Args --> ImportCfg["Import Task/env_cfg.py: SatelliteEnvCfg"]
+
+    subgraph Registration["How tasks/ is called"]
+        ImportCfg --> Init["Python first executes tasks/__init__.py"]
+        Init --> Arm["Explicit import: satellite_direct/config/Arm/__init__.py"]
+        Arm --> Register["gym.register: SatelliteProject-Satellite-Arm-Direct<br/>Entry point: Task/env.py:SatelliteEnv"]
+    end
+
+    Register --> Config["Create SatelliteEnvCfg<br/>Set seed, num_envs and device"]
+    Config --> Launch["Isaac Lab launch_simulation context<br/>Start physics and optional Kit renderer"]
+    Launch --> Make["gym.make resolves registered entry point<br/>Construct Task/env.py: SatelliteEnv"]
+    Make --> Scene["DirectRLEnv builds scene from Task/env_cfg.py"]
+
+    subgraph AssetLoading["Assets used by the task"]
+        Robot["Assets/environments/robot.usda<br/>Active arm, tooling and physics settings"]
+        Vendor["Assets/robots/abb_irb1600/IRB1600_X-120.usd<br/>Vendor geometry and configuration layers"]
+        Batch["Assets/environments/batch.usda<br/>Eight cells represented as one dynamic rigid body"]
+        Static["Assets/environments/static.usda<br/>Fixtures, supply stacks, transfer surfaces,<br/>guards, array section and static rear arm"]
+        Factory["Assets/environments/factory.usda<br/>Full editable scene composition"]
+        Robot -.-> Vendor
+        Static -.-> Factory
+        Factory -.-> Vendor
+    end
+
+    Scene -.-> Robot
+    Scene -.-> Batch
+    Scene -.-> Static
+    Scene --> Reset["env.reset<br/>Reset joints, batch pose and vacuum state;<br/>return initial observations"]
+    Reset --> Mode{"Selected mode?"}
+
+    Mode -->|demo| Demo["factory_demo.py: run_demo<br/>Solve IK waypoints using robot.usda joint frames<br/>Send joint increments and vacuum commands"]
+    Mode -->|drive| Drive["drive_factory.py: drive<br/>Sliders, vacuum switch and reset button"]
+    Mode -->|train| Train["RSL-RL runner.learn<br/>PPO selects actions and updates its policy"]
+    Mode -->|play| Play["Load checkpoint<br/>Policy selects actions without learning"]
+    Mode -->|smoke| Smoke["Fixed test actions and physical-state assertions"]
+
+    Demo --> Step["env.step(actions)<br/>Task/env.py + Isaac Lab lifecycle"]
+    Drive --> Step
+    Train --> Step
+    Play --> Step
+    Smoke --> Step
+    Step --> Physics["Update joint targets and attachment state<br/>Apply drives and vacuum forces<br/>Advance physics"]
+    Physics --> Results["Compute termination, reward and observations<br/>Reset completed environments as needed"]
+    Results --> Continue{"Controller finished?"}
+    Continue -->|No: next action| Mode
+    Continue -->|Yes| Close["Finish validation and output writes<br/>Close video writer if enabled<br/>env.close"]
+    Close --> Shutdown["Exit launch_simulation context<br/>Release simulator resources; Python exits"]
+
+    Demo -.-> Recording["recording.py, when requested<br/>--capture: milestone PNGs<br/>--record-mp4: live viewport frames"]
+    Recording -.-> Media["recordings/date/ for screenshots<br/>User-selected MP4 path"]
+    Demo -.-> Report["outputs/demo.json<br/>Phase states and delivery validation"]
+    Train -.-> Logs["--log-dir, default outputs/training/<br/>Training metrics and model checkpoints"]
+```
+
+The loop back to the mode branch means “ask the already selected controller for its next action”; it
+does not recreate the controller or reload a checkpoint. The demo finishes after its transfer sequence,
+`play` after 360 steps, `train` after the requested iterations, and `drive` when its simulation loop ends
+or a supplied `--steps` limit is reached. This diagram shows normal completion; an assertion or runtime
+error can stop a run earlier.
+
+`static.usda` references the full scene but disables the active robot, batch, building, and scene-level
+physics/lighting/cameras. The task supplies its own active robot, batch, floor and light through
+`env_cfg.py`. The rear robot remains a visual fixture in this task.
+
+### What happens during training
+
+Training uses the same `SatelliteEnv` as the demo. The difference is who chooses the seven actions:
+PPO chooses six joint-target increments and one vacuum command instead of following scripted waypoints.
+
+```mermaid
+flowchart TD
+    Start["run_factory.py --mode train"] --> Agent["Task/agents/rsl_rl_ppo_cfg.py<br/>Actor, critic and PPO hyperparameters"]
+    Agent --> Wrap["RslRlVecEnvWrapper wraps SatelliteEnv<br/>create_rsl_rl_runner builds PPO runner"]
+    Wrap --> Learn["runner.learn for requested iterations"]
+    Learn --> Obs["31 observations per environment<br/>Joint state, relative positions, batch velocity,<br/>attachment/progress state and previous actions"]
+    Obs --> Policy["Actor samples 7 actions<br/>Critic estimates state value"]
+    Policy --> Pre["Task/env.py: _pre_physics_step<br/>Clamp actions, update targets,<br/>check vacuum attachment or release"]
+    Pre --> Apply["_apply_action + physics<br/>Joint drives and bounded vacuum forces<br/>4 physics substeps per action"]
+    Apply --> Evaluate["_get_dones, _get_rewards, _get_observations<br/>Delivery/failure/timeout checks and reward<br/>_reset_idx for finished environments"]
+    Evaluate --> Buffer["Store rollout transitions across all environments"]
+    Buffer --> Full{"16 control steps<br/>per environment collected?"}
+    Full -->|No| Obs
+    Full -->|Yes| Returns["Compute returns and advantages"]
+    Returns --> PPO["PPO optimization<br/>5 learning epochs, 4 minibatches<br/>Update actor and critic"]
+    PPO --> Save["Log metrics; save checkpoints at configured intervals<br/>and at the end of training"]
+    Save --> Done{"Requested iterations complete?"}
+    Done -->|No| Obs
+    Done -->|Yes| End["Return to runner<br/>env.close and simulator shutdown"]
+```
+
+Physics runs at 120 Hz and the controller at 30 Hz. The reward encourages reaching, attachment,
+lifting and moving the batch toward the goal, with an action penalty, a drop penalty and a successful
+settling bonus. Success requires the released batch to remain near the target with low velocity after
+having been lifted. Episode resets slightly randomize the batch's horizontal starting position;
+the scripted demo disables this randomization.
+
+The demonstrated successful transfer is currently **scripted control through simulated physics**.
+The PPO checks establish that rollout collection, optimization, saving and checkpoint playback work;
+they do not establish that a trained policy reliably completes the task. Parallel environments are
+independent single-agent copies, not cooperating agents.
+
+### Scene preparation and standalone tools
+
+These are separate terminal entry points; `run_factory.py` uses existing assets and does not rebuild
+them automatically.
+
+| Terminal script | Files used or produced | Completion |
+|---|---|---|
+| `scripts/build_factory.py` | Reads the pinned ABB vendor assets; generates `factory.usda`, flattened `factory.usdc`, `robot.usda`, `batch.usda`, and `static.usda`. | Saves assets and exits; no training loop. |
+| `scripts/preview.py` | Opens full `factory.usda` by default, including both articulated arms, the room, lights and four authored cameras. `--asset` can select `factory.usdc`. | Displays until the app closes; `--capture` saves four camera PNGs and closes the app. |
+| `scripts/validate_stage.py` | Opens `factory.usdc` directly in Isaac Sim; drives both robot articulations and checks batch support. | Runs assertions, clears the world and closes the app. |
+| `scripts/list_envs.py` | Imports `tasks/__init__.py` and prints the supported task registration. | Exits without starting physics or training. |

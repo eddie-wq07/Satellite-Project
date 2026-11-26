@@ -1,116 +1,92 @@
-# Satellite Project — ABB photovoltaic handling cell
+# Starlink Manufacturing Project
 
-A saved OpenUSD factory scene and a working Isaac Lab batch-transfer task, reconstructed from
-[vision.md](vision.md). Two articulated ABB arms, distributed tooling, solar-cell supply stacks,
-orange transfer surfaces, transparent guards, an array section, controls, lights and four cameras
-are composed in metre-scale, Z-up USD.
+An Isaac Sim reconstruction of the robot-assisted solar-cell handling shown in Starlink factory footage. An ABB arm picks up a batch of cells, lifts it, transfers it to a table, and releases it using simulated vacuum forces.
 
-**Open in Isaac Sim:** [`factory.usdc`](src/Satellite_Project/assets/data/environments/factory.usdc),
-a single-file scene with geometry and physics included. The editable composition is
-[`factory.usda`](src/Satellite_Project/assets/data/environments/factory.usda); keep its adjacent
-`robots/` and `environments/` folders together. Isaac Sim supplies the built-in `OmniPBR.mdl` material.
+**The working demo is scripted.** The project also includes a trainable PPO task, but a reliable learned handling policy has not yet been demonstrated.
 
-![Factory overview](recordings/11-26-2026/11:04am_factory-overview.png)
+[![Watch the 6-second side-by-side comparison](recordings/11-26-2026/comparison-preview.jpg)](recordings/11-26-2026/starlink-side-by-side.mp4)
 
-## Run
+**[Watch the 6-second comparison](recordings/11-26-2026/starlink-side-by-side.mp4):** source footage on the left, simulation on the right. The SpaceX clip runs continuously at its original speed from 1:28 to 1:34. The full simulation runs at a constant 3.53x speed to match. [Original footage](https://www.youtube.com/watch?v=1dQK2CWAyxE&t=88s).
 
-Run from the repository root with Python 3.12 and an Isaac Sim 6.2 / Isaac Lab 3.0
-environment containing RSL-RL, SciPy, and ImageIO/FFmpeg. The commands below use
-`~/env_isaaclab/bin/python`; substitute your environment’s Python path if different.
-The runner adds `src/` to the import path automatically.
+## Start here
+
+- **Watch the simulation:** [Full handling cycle, 21 seconds](recordings/11-26-2026/full-demo.mp4).
+- **Explore the scene:** Open [factory.usdc](src/Satellite_Project/assets/data/environments/factory.usdc) in Isaac Sim. Use its Overview, Pickup, Cells, or Array camera.
+- **Understand the implementation:** [vision.md](vision.md#implemented-program-flow) includes the source analysis, file flowcharts, asset dependencies, and training loop.
+
+## Run the demo
+
+Use Python 3.12 with Isaac Sim 6.2, Isaac Lab 3.0, RSL-RL, SciPy, and ImageIO/FFmpeg installed. Run commands from the repository root. Replace `~/env_isaaclab/bin/python` with your environment's Python path if needed.
 
 ```bash
-# Full saved factory; use its Overview, Pickup, Cells or Array cameras.
-~/env_isaaclab/bin/python scripts/preview.py
-
-# Interactive physical cell: six joint sliders, vacuum switch and reset button.
-~/env_isaaclab/bin/python scripts/run_factory.py --mode drive
-
-# Validated scripted approach → contact → lift → transfer → release → retract.
 ~/env_isaaclab/bin/python scripts/run_factory.py --mode demo
+```
 
-# Record live physics milestones without opening a desktop window.
-~/env_isaaclab/bin/python scripts/run_factory.py --mode demo --capture --record-mp4 recordings/demo.mp4 \
-  --visualizer kit --kit_args=--no-window
+The arm runs through approach, contact, lift, transfer, release, and retraction. The program checks that the batch reaches the target and settles, then exits.
 
-# Parallel PPO training; this task has seven actions and 31 state observations.
+| What you want to do | Command |
+|---|---|
+| View the complete factory | `~/env_isaaclab/bin/python scripts/preview.py` |
+| Control the arm with sliders | `~/env_isaaclab/bin/python scripts/run_factory.py --mode drive` |
+| Test eight independent cells | `~/env_isaaclab/bin/python scripts/run_factory.py --mode demo --num-envs 8` |
+| List the supported task | `~/env_isaaclab/bin/python scripts/list_envs.py` |
+
+To record a video and milestone screenshots without opening a window:
+
+```bash
+~/env_isaaclab/bin/python scripts/run_factory.py --mode demo --capture \
+  --record-mp4 recordings/demo.mp4 --visualizer kit --kit_args=--no-window
+```
+
+Use a new output filename for each video. Screenshots are saved in dated folders under `recordings/`.
+
+## Train and run a policy
+
+PPO uses the same environment and physics as the scripted demo. It receives 31 observations and chooses seven actions: six joint increments and one vacuum command.
+
+```bash
+# Train across eight independent environments
 ~/env_isaaclab/bin/python scripts/run_factory.py --mode train --num-envs 8 --iterations 500
 
-# Reload the final checkpoint from the 500-iteration run above.
+# Run the final checkpoint for 360 steps
 ~/env_isaaclab/bin/python scripts/run_factory.py --mode play --num-envs 8 \
   --checkpoint outputs/training/model_499.pt
 ```
 
-## Code structure and control flow
+Training writes metrics and checkpoints to `outputs/training/`. Use `--log-dir` to choose another directory. Checkpoints are generated locally and are not included in Git. A completed training run does not by itself prove successful manipulation.
 
-The only registered task is `SatelliteProject-Satellite-Arm-Direct`. Its implementation lives in
-`src/Satellite_Project/tasks/satellite_direct/config/Arm/`:
+## Where things live
 
-- `env_cfg.py`: robot, fixtures, simulation settings, seven actions and 31 observations.
-- `env.py`: joint/vacuum actions, physical attachment, observations, rewards, resets and completion checks.
-- `agents/rsl_rl_ppo_cfg.py`: the supported RSL-RL PPO training configuration.
+| Location | Purpose |
+|---|---|
+| `scripts/run_factory.py` | Starts the environment and selects demo, manual control, training, playback, or smoke testing. |
+| `scripts/factory_demo.py` | Scripted waypoints and inverse kinematics for the demonstrated transfer. |
+| `src/Satellite_Project/tasks/satellite_direct/config/Arm/` | The single supported task: scene configuration, actions, observations, rewards, resets, and PPO settings. |
+| `src/Satellite_Project/assets/data/environments/` | Full factory scene and the robot, batch, and fixture layers used by the task. |
+| `src/Satellite_Project/assets/data/robots/` | Original ABB model, source information, and license. |
+| `recordings/` | Videos, screenshots, and validation evidence. |
+| [vision.md](vision.md) | Footage analysis and Mermaid diagrams of the program and training flow. |
+| [log.md](log.md) | Development history and validation results. |
 
-`run_factory.py` creates this same environment for every mode. In `demo`, `factory_demo.py`
-computes joint targets from scripted waypoints; in `drive`, manual controls supply actions;
-in `train` and `play`, PPO supplies actions. Each controller uses `env.step()` and the same
-physics. Eight parallel environments are independent single-agent copies.
+The registered task is `SatelliteProject-Satellite-Arm-Direct`. Demo, manual control, and PPO all send actions through its `env.step()` method. Parallel environments are independent single-agent copies.
 
-`scripts/build_factory.py` generates the scene assets, `preview.py` displays the full scene,
-`validate_stage.py` checks both native robot articulations, and `list_envs.py` lists this project's
-task without loading unrelated installed plugins. `recording.py` and `sim_bootstrap.py` are
-shared helpers. Unsupported task and agent templates have been removed.
+## What works and what is simplified
 
-The interactive/task scene uses the same saved fixtures and robot. Its rear arm is a static
-visual reference, and room walls are omitted for parallel environments. Both arms are articulated
-in the full `factory.usda`. Joint targets can also be edited through Isaac Sim's articulation tools;
-the vacuum logic runs in the task, rather than being embedded Python in the USD.
+**Verified:** scripted delivery in eight environments, both robot articulations in the full scene, manual controls, scene rendering, PPO training, checkpoint reload, and five automated tests. See the [November 26 validation](recordings/11-26-2026/validation.json) and [latest checks](log.md).
 
-## What is verified
+**Simplified:** the task controls one arm; the rear arm is a static visual reference. Eight cells move as one rigid batch, supply stacks are static, and vacuum uses a compliant force-limited attachment. Cell flexure, fracture, leakage, moving conveyors, and downstream manufacturing are not simulated.
 
-- Isaac Sim rendering of the full composed scene and inspection cameras.
-- Physical joint motion and stable holding, collision support for the cell batch, contact-gated pickup,
-  lift, transfer, release, and settled delivery checks.
-- Parallel Isaac Lab simulation, PPO optimization, checkpoint creation and reload.
-- Offline asset composition, six-joint structure, reachable waypoints, and unmodified upstream file hashes.
+The reconstruction is based on edited footage, not a recovered factory program. Dimensions, tooling, motion, and physical settings are assumptions. The model is an [ABB IRB1600 X-120 from Workr](src/Satellite_Project/assets/data/robots/abb_irb1600/SOURCE.md); the exact robot variant in the footage is unconfirmed. The larger array section is a separate visual fixture. Original asset attribution and [license](src/Satellite_Project/assets/data/robots/abb_irb1600/LICENSE) are retained.
 
-The short PPO run is an **execution test**, not a successful learned manipulation policy. The completed
-handling demonstration uses inverse kinematics and joint drives. Training checkpoints and diagnostics
-are under `outputs/`; dated screenshots and the progress history are in [log.md](log.md).
-
-## Reconstruction limits
-
-The robot is the real **ABB IRB1600 X-120 USD** from [Workr's robot library](https://github.com/work-r-labs/robots),
-revision `ab6aa489855256de07ba46c7b45887fdbc42b607`. Its geometry closely resembles the supplied footage;
-**the exact factory robot variant cannot be confirmed** from the available frames. It is not represented
-as a verified exact copy. See [asset provenance](src/Satellite_Project/assets/data/robots/abb_irb1600/source.json)
-and the included upstream [license](src/Satellite_Project/assets/data/robots/abb_irb1600/LICENSE).
-
-Dimensions, placement, mass, tooling, drive tuning, vacuum behavior and trajectory are simulation
-assumptions. Eight cells are represented as one rigid batch; the twelve-layer supply stacks are static.
-Vacuum is a compliant, force-limited attachment with equal and opposite wrist reaction, a 4 mm approach
-gate, and release/slip logic. Individual wafer flexure, fracture, leakage, conveyor transport and downstream
-manufacturing processes are not simulated. The larger array section is separate from the transferred batch,
-in accordance with the montage's uncertain continuity; its inspection stand is an inferred fixture.
-
-## Rebuild and check
+## Rebuild and verify
 
 ```bash
 ~/env_isaaclab/bin/python scripts/build_factory.py
-~/env_isaaclab/bin/python scripts/preview.py --capture
 ~/env_isaaclab/bin/python scripts/validate_stage.py
 ~/env_isaaclab/bin/python scripts/run_factory.py --mode smoke --num-envs 8
 PYTHONPATH=src ~/env_isaaclab/bin/python -m pytest -q
 ```
 
-The builder changes project composition layers, never the pinned vendor USDs. The uv source paths
-in `pyproject.toml` point to the local Isaac Lab checkout at `../../../../IsaacLab`; update those
-paths before using uv on another machine. The commands above use an existing simulator environment.
+The builder regenerates project scene layers without modifying the original vendor assets. Use `factory.usdc` for a single-file scene or `factory.usda` for editable composition, keeping the adjacent `robots/` and `environments/` folders together.
 
-## Latest validation
-
-[November 26 recording](recordings/11-26-2026/full-demo.mp4): 21.17 seconds at 30 FPS.
-Eight environments completed the scripted transfer. Scene rendering, both articulations, manual
-controls, PPO training/checkpoint reload, and the asset tests were checked. See the
-[validation manifest](recordings/11-26-2026/validation.json) and [progress log](log.md).
-Checkpoints and runtime logs under `outputs/` are generated locally and are not included in Git;
-run training to produce a checkpoint before using `--mode play`.
+For a different machine, update the local Isaac Lab source paths in `pyproject.toml` before using uv. They currently point to `../../../../IsaacLab`. A fresh installation on a separate machine has not yet been tested.

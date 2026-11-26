@@ -118,3 +118,19 @@ All times use America/Vancouver. Milestones follow S1-Project's
 - Updated the registration test, README control-flow explanation, runtime prerequisites, recording command and VS Code launch templates. Removed an unreachable statement and obsolete asset placeholder. Historical evidence and vendor assets remain intact.
 - Validation after cleanup: five tests passed; lint, formatting, TOML/JSON parsing and diff whitespace checks passed. All eight environments completed the scripted demo; two PPO iterations produced `outputs/11-26-2026/cleanup/training/model_1.pt`, which reloaded and ran for 360 steps. Runtime logs are in `outputs/11-26-2026/cleanup/`.
 - Validation used the existing Isaac environment; a fresh installation on a separate machine has not been tested. Local uv source paths must be adjusted for another checkout location, as documented in README.
+
+## 11-26-2026 — Side-by-side comparison and README
+
+- Created `recordings/11-26-2026/starlink-side-by-side.mp4`: 10 seconds, 300 frames, 30 FPS, 1920×800, no audio. Source footage appears on the left and the November 26 simulation on the right.
+- Compared approach, contact/lift, and the transfer surface using individually retimed excerpts. Labels distinguish source footage from scripted simulation and note that the edited source does not show a continuous pickup-to-delivery cycle.
+- Source: GeoXpedia's “SpaceX's Satellite Factory,” YouTube ID `1dQK2CWAyxE`. Segment timestamps are recorded in `recordings/11-26-2026/comparison-edit.json`. The original downloaded video was kept outside the repository.
+- Inspected decoded frames from all three sections and verified the final video's duration, resolution, FPS and frame count.
+- Renamed the README heading to “Starlink Manufacturing Project,” added a linked comparison preview, simplified run instructions and code navigation, and verified local links and the absence of em dashes.
+
+### Comparison styling update
+
+Replaced the comparison captions and footer with dark “SpaceX” and “Mine” overlays. The revised video is 1920×600, retains the 10-second edit, and has an updated README preview.
+
+### Comparison timing update
+
+Replaced the segmented edit with a continuous six-second source excerpt (1:28 to 1:34) at original speed. The full simulation plays at a constant 3.53x speed alongside it. Retained the SpaceX/Mine overlays and updated the README and preview. Verified 180 frames at 30 FPS.

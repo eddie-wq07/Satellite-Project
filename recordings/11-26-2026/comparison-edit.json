@@ -1,0 +1,28 @@
+{
+  "source_url": "https://www.youtube.com/watch?v=1dQK2CWAyxE",
+  "simulation": "full-demo.mp4",
+  "output": "starlink-side-by-side.mp4",
+  "duration_seconds": 6,
+  "fps": 30,
+  "resolution": [
+    1920,
+    600
+  ],
+  "audio": false,
+  "segments": [
+    {
+      "duration": 6,
+      "source": [
+        88,
+        94
+      ],
+      "simulation": [
+        0,
+        21.166666666666668
+      ]
+    }
+  ],
+  "source_playback_speed": 1.0,
+  "simulation_playback_speed": 3.5277777777777777,
+  "note": "Continuous source interval at original speed. Full simulation at a single constant speed to match source duration. Original source cuts are preserved."
+}
