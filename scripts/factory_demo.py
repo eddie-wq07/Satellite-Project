@@ -86,7 +86,6 @@ def run_demo(env, capture=False, frame_callback=None):
             if done.any() or trunc.any():
                 print("EPISODE_END", name, info.get("log"), flush=True)
                 raise RuntimeError("Unexpected reset before transfer was validated")
-                break
         report = {
             "phase": name,
             "joints": base.robot.data.joint_pos.torch[0].tolist(),

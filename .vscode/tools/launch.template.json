@@ -5,386 +5,78 @@
             "name": "Python: Current File",
             "type": "debugpy",
             "request": "launch",
-            // Use the interpreter recorded by `isaaclab --editor`; VS Code skips wrapper scripts such as python.sh
             "python": "${config:python.defaultInterpreterPath}",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
         },
         {
-            "name": "Train SatelliteProject-Satellite-Arm with rsl_rl (PPO)",
+            "name": "Factory: demo",
             "type": "debugpy",
             "request": "launch",
             "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
+            "program": "${workspaceFolder}/scripts/run_factory.py",
             "args": [
+                "--mode",
+                "demo"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Factory: drive",
+            "type": "debugpy",
+            "request": "launch",
+            "python": "${config:python.defaultInterpreterPath}",
+            "program": "${workspaceFolder}/scripts/run_factory.py",
+            "args": [
+                "--mode",
+                "drive"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Factory: train",
+            "type": "debugpy",
+            "request": "launch",
+            "python": "${config:python.defaultInterpreterPath}",
+            "program": "${workspaceFolder}/scripts/run_factory.py",
+            "args": [
+                "--mode",
                 "train",
-                "--rl_library", "rsl_rl",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "4096"            ],
-            "console": "integratedTerminal"
+                "--num-envs",
+                "8",
+                "--iterations",
+                "500"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
         },
         {
-            "name": "Play SatelliteProject-Satellite-Arm with rsl_rl (PPO)",
+            "name": "Factory: play",
             "type": "debugpy",
             "request": "launch",
             "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
+            "program": "${workspaceFolder}/scripts/run_factory.py",
             "args": [
+                "--mode",
                 "play",
-                "--rl_library", "rsl_rl",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "32"            ],
-            "console": "integratedTerminal"
-        },
+                "--num-envs",
+                "8",
+                "--checkpoint",
+                "${input:checkpoint}"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        }
+    ],
+    "inputs": [
         {
-            "name": "Train SatelliteProject-Satellite-Arm with rsl_rl (DISTILLATION)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "rsl_rl",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "4096"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm with rsl_rl (DISTILLATION)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "rsl_rl",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "32"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm with rl_games (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "rl_games",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "4096"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm with rl_games (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "rl_games",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "32"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm with skrl (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "4096",
-                "--algorithm", "PPO"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm with skrl (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "32",
-                "--algorithm", "PPO"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm with skrl (AMP)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "4096",
-                "--algorithm", "AMP"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm with skrl (AMP)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "32",
-                "--algorithm", "AMP"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm with sb3 (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "sb3",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "4096"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm with sb3 (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "sb3",
-                "--task", "SatelliteProject-Satellite-Arm",
-                "--num_envs", "32"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm-Direct with rsl_rl (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "rsl_rl",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "4096"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm-Direct with rsl_rl (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "rsl_rl",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "32"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm-Direct with rsl_rl (DISTILLATION)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "rsl_rl",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "4096"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm-Direct with rsl_rl (DISTILLATION)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "rsl_rl",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "32"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm-Direct with rl_games (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "rl_games",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "4096"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm-Direct with rl_games (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "rl_games",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "32"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm-Direct with skrl (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "4096",
-                "--algorithm", "PPO"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm-Direct with skrl (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "32",
-                "--algorithm", "PPO"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm-Direct with skrl (AMP)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "4096",
-                "--algorithm", "AMP"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm-Direct with skrl (AMP)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "32",
-                "--algorithm", "AMP"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Arm-Direct with sb3 (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "sb3",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "4096"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Arm-Direct with sb3 (PPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "sb3",
-                "--task", "SatelliteProject-Satellite-Arm-Direct",
-                "--num_envs", "32"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Marl-Arm-Direct with skrl (IPPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Marl-Arm-Direct",
-                "--num_envs", "4096",
-                "--algorithm", "IPPO"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Marl-Arm-Direct with skrl (IPPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Marl-Arm-Direct",
-                "--num_envs", "32",
-                "--algorithm", "IPPO"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Train SatelliteProject-Satellite-Marl-Arm-Direct with skrl (MAPPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "train",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Marl-Arm-Direct",
-                "--num_envs", "4096",
-                "--algorithm", "MAPPO"            ],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Play SatelliteProject-Satellite-Marl-Arm-Direct with skrl (MAPPO)",
-            "type": "debugpy",
-            "request": "launch",
-            "python": "${config:python.defaultInterpreterPath}",
-            "module": "isaaclab",
-            "args": [
-                "play",
-                "--rl_library", "skrl",
-                "--task", "SatelliteProject-Satellite-Marl-Arm-Direct",
-                "--num_envs", "32",
-                "--algorithm", "MAPPO"            ],
-            "console": "integratedTerminal"
-        },
+            "id": "checkpoint",
+            "type": "promptString",
+            "description": "Path to a trained PPO checkpoint",
+            "default": "outputs/training/model_499.pt"
+        }
     ]
 }

@@ -11,6 +11,9 @@ parser.add_argument("--mode", choices=["smoke", "demo", "train", "play", "drive"
 parser.add_argument("--num-envs", type=int, default=1)
 parser.add_argument("--iterations", type=int, default=10)
 parser.add_argument("--checkpoint")
+parser.add_argument(
+    "--log-dir", default=str(sim_bootstrap.ROOT / "outputs/training"), help="Training output directory."
+)
 parser.add_argument("--capture", action="store_true")
 parser.add_argument("--record-mp4", help="Save the demo as a 30 FPS MP4 at this path.")
 parser.add_argument(
@@ -87,7 +90,7 @@ with launch_simulation(cfg, args):
         agent.max_iterations = args.iterations
         agent = handle_deprecated_rsl_rl_cfg(agent, importlib.metadata.version("rsl-rl-lib"))
         wrapped = RslRlVecEnvWrapper(env, clip_actions=1.0)
-        runner = create_rsl_rl_runner(wrapped, agent, log_dir=str(sim_bootstrap.ROOT / "outputs/training"))
+        runner = create_rsl_rl_runner(wrapped, agent, log_dir=args.log_dir)
         if args.mode == "train":
             runner.learn(num_learning_iterations=args.iterations, init_at_random_ep_len=True)
         else:

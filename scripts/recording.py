@@ -1,4 +1,4 @@
-"""S1/Mars dated milestone captures from the live Isaac viewport."""
+"""Dated factory milestone captures from the live Isaac viewport."""
 
 import asyncio
 from datetime import datetime
@@ -11,8 +11,8 @@ class VideoRecorder:
     """Encode live viewport frames at the demo's 30 Hz control rate."""
 
     def __init__(self, sim, destination):
-        from pathlib import Path
         import tempfile
+        from pathlib import Path
 
         import imageio.v2 as imageio
 
@@ -25,11 +25,19 @@ class VideoRecorder:
         self.temp = tempfile.TemporaryDirectory(prefix="satellite-video-")
         self.frame_path = Path(self.temp.name) / "frame.png"
         self.writer = imageio.get_writer(
-            str(self.destination), fps=30, codec="libx264", quality=8,
-            macro_block_size=2, ffmpeg_params=["-movflags", "+faststart"],
+            str(self.destination),
+            fps=30,
+            codec="libx264",
+            quality=8,
+            macro_block_size=2,
+            ffmpeg_params=["-movflags", "+faststart"],
         )
         self.frames = 0
         for _ in range(25):
+            sim.render()
+        # Kit may apply its startup window size during the warmup renders.
+        self.viewport.resolution = (1600, 1000)
+        for _ in range(2):
             sim.render()
 
     def capture_frame(self):
@@ -43,6 +51,9 @@ class VideoRecorder:
         while not pending.done():
             self.sim.render()
         pending.result()
+        import omni.kit.renderer_capture
+
+        omni.kit.renderer_capture.acquire_renderer_capture_interface().wait_async_capture()
         self.writer.append_data(imageio.imread(self.frame_path)[..., :3])
         self.frames += 1
         if self.frames % 100 == 0:

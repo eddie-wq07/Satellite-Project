@@ -10,7 +10,7 @@ build-backend = "uv_build"
 [project]
 name = "Satellite_Project"
 version = "0.1.0"
-description = "Isaac Lab environments for Satellite_Project."
+description = "ABB photovoltaic batch handling simulation and direct PPO task for Isaac Lab."
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
@@ -18,36 +18,13 @@ authors = [
 ]
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "isaaclab-dev[rsl-rl,rl-games,skrl,sb3]",
+    "isaaclab-dev[rsl-rl]",
+    "scipy",
+    "imageio[ffmpeg]",
 ]
 
 [project.entry-points."isaaclab.tasks"]
 Satellite_Project = "Satellite_Project.tasks"
-
-[project.optional-dependencies]
-all = ["isaaclab-dev[all]"]
-dev = ["isaaclab-dev[dev]"]
-importers = ["isaaclab-dev[importers]"]
-isaacsim = ["isaaclab-dev[isaacsim]"]
-leapp = ["isaaclab-dev[leapp]"]
-mimic = ["isaaclab-dev[mimic]"]
-ov = ["isaaclab-dev[ov]"]
-ovphysx = ["isaaclab-dev[ovphysx]"]
-ovrtx = ["isaaclab-dev[ovrtx]"]
-rerun = ["isaaclab-dev[rerun]"]
-rl-games = ["isaaclab-dev[rl-games]"]
-rlinf = ["isaaclab-dev[rlinf]"]
-rsl-rl = ["isaaclab-dev[rsl-rl]"]
-sb3 = ["isaaclab-dev[sb3]"]
-skrl = ["isaaclab-dev[skrl]"]
-skrl-jax = ["isaaclab-dev[skrl-jax]"]
-teleop = ["isaaclab-dev[teleop]"]
-test = ["isaaclab-dev[test]"]
-tetrahedralization = ["isaaclab-dev[tetrahedralization]"]
-torchrl = ["isaaclab-dev[torchrl]"]
-video = ["isaaclab-dev[video]"]
-viser = ["isaaclab-dev[viser]"]
-wandb = ["isaaclab-dev[wandb]"]
 
 [dependency-groups]
 dev = ["codespell>=2.4", "pre-commit>=4.2", "pytest>=8.3", "ruff>=0.11"]

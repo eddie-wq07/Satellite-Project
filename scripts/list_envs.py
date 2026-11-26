@@ -3,11 +3,20 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Compatibility wrapper for ``isaaclab list_envs``."""
+"""List this project's supported Gym tasks without loading external task plugins."""
 
-import sys
+import gymnasium as gym
+import sim_bootstrap  # noqa: F401
 
-from isaaclab.cli.commands.list_envs import command_list_envs
+import Satellite_Project.tasks  # noqa: F401
+
+
+def main():
+    for spec in gym.registry.values():
+        if spec.id.startswith("SatelliteProject-"):
+            print(f"{spec.id}\n  Environment: {spec.entry_point}")
+            print(f"  PPO config: {spec.kwargs['rsl_rl_cfg_entry_point']}")
+
 
 if __name__ == "__main__":
-    command_list_envs(sys.argv[1:])
+    main()

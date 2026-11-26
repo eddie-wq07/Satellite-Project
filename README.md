@@ -10,12 +10,14 @@ a single-file scene with geometry and physics included. The editable composition
 [`factory.usda`](src/Satellite_Project/assets/data/environments/factory.usda); keep its adjacent
 `robots/` and `environments/` folders together. Isaac Sim supplies the built-in `OmniPBR.mdl` material.
 
-![Factory overview](recordings/11-22-2026/11:29pm_factory-overview.png)
+![Factory overview](recordings/11-26-2026/11:04am_factory-overview.png)
 
 ## Run
 
-Run from this repository with the same installed Isaac Sim 6.2 / Isaac Lab 3.0 environment used
-by S1-Project:
+Run from the repository root with Python 3.12 and an Isaac Sim 6.2 / Isaac Lab 3.0
+environment containing RSL-RL, SciPy, and ImageIO/FFmpeg. The commands below use
+`~/env_isaaclab/bin/python`; substitute your environment’s Python path if different.
+The runner adds `src/` to the import path automatically.
 
 ```bash
 # Full saved factory; use its Overview, Pickup, Cells or Array cameras.
@@ -28,21 +30,35 @@ by S1-Project:
 ~/env_isaaclab/bin/python scripts/run_factory.py --mode demo
 
 # Record live physics milestones without opening a desktop window.
-~/env_isaaclab/bin/python scripts/run_factory.py --mode demo --capture \
+~/env_isaaclab/bin/python scripts/run_factory.py --mode demo --capture --record-mp4 recordings/demo.mp4 \
   --visualizer kit --kit_args=--no-window
 
 # Parallel PPO training; this task has seven actions and 31 state observations.
 ~/env_isaaclab/bin/python scripts/run_factory.py --mode train --num-envs 8 --iterations 500
 
-# Reload the checkpoint produced by the completed training smoke run.
+# Reload the final checkpoint from the 500-iteration run above.
 ~/env_isaaclab/bin/python scripts/run_factory.py --mode play --num-envs 8 \
-  --checkpoint outputs/training/model_11.pt
+  --checkpoint outputs/training/model_499.pt
 ```
 
-The supported Gym task is `SatelliteProject-Satellite-Arm-Direct`, in the existing
-`src/Satellite_Project/tasks/satellite_direct/config/Arm/` layout. The manager-based and MARL
-registrations inherited from the initial template remain unimplemented; they are not required
-by these commands. AMP and distillation are also outside the implemented PPO workflow.
+## Code structure and control flow
+
+The only registered task is `SatelliteProject-Satellite-Arm-Direct`. Its implementation lives in
+`src/Satellite_Project/tasks/satellite_direct/config/Arm/`:
+
+- `env_cfg.py`: robot, fixtures, simulation settings, seven actions and 31 observations.
+- `env.py`: joint/vacuum actions, physical attachment, observations, rewards, resets and completion checks.
+- `agents/rsl_rl_ppo_cfg.py`: the supported RSL-RL PPO training configuration.
+
+`run_factory.py` creates this same environment for every mode. In `demo`, `factory_demo.py`
+computes joint targets from scripted waypoints; in `drive`, manual controls supply actions;
+in `train` and `play`, PPO supplies actions. Each controller uses `env.step()` and the same
+physics. Eight parallel environments are independent single-agent copies.
+
+`scripts/build_factory.py` generates the scene assets, `preview.py` displays the full scene,
+`validate_stage.py` checks both native robot articulations, and `list_envs.py` lists this project's
+task without loading unrelated installed plugins. `recording.py` and `sim_bootstrap.py` are
+shared helpers. Unsupported task and agent templates have been removed.
 
 The interactive/task scene uses the same saved fixtures and robot. Its rear arm is a static
 visual reference, and room walls are omitted for parallel environments. Both arms are articulated
@@ -86,6 +102,15 @@ in accordance with the montage's uncertain continuity; its inspection stand is a
 PYTHONPATH=src ~/env_isaaclab/bin/python -m pytest -q
 ```
 
-The builder changes project composition layers, never the pinned vendor USDs. `pyproject.toml` retains
-the template's uv layout, with local Isaac Lab source paths corrected to `~/IsaacLab` from this checkout.
-The commands above use the already installed environment; no new simulator installation is needed.
+The builder changes project composition layers, never the pinned vendor USDs. The uv source paths
+in `pyproject.toml` point to the local Isaac Lab checkout at `../../../../IsaacLab`; update those
+paths before using uv on another machine. The commands above use an existing simulator environment.
+
+## Latest validation
+
+[November 26 recording](recordings/11-26-2026/full-demo.mp4): 21.17 seconds at 30 FPS.
+Eight environments completed the scripted transfer. Scene rendering, both articulations, manual
+controls, PPO training/checkpoint reload, and the asset tests were checked. See the
+[validation manifest](recordings/11-26-2026/validation.json) and [progress log](log.md).
+Checkpoints and runtime logs under `outputs/` are generated locally and are not included in Git;
+run training to produce a checkpoint before using `--mode play`.

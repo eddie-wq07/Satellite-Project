@@ -1,4 +1,4 @@
-"""Use the existing Isaac environment and project src layout, as in S1-Project."""
+"""Use the installed Isaac environment with this project's src layout."""
 
 import os
 import sys
